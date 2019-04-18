@@ -1,0 +1,43 @@
+# moviestats package vignette
+
+```{r}
+    
+    ## Require
+    require(magrittr)
+    require(rvest)
+    
+    ## Workflow 
+    
+    # Get the 10.000 movies with the highest total gross
+    ranked.titles <- getTitles(n.pages = 5)
+    ranked.titles[duplicated(ranked.titles)]
+    ranked.titles <- ranked.titles[!duplicated(ranked.titles)]
+    length(ranked.titles)
+    
+    isTRUE('The Greatest Showman' %in% ranked.titles)
+    which(ranked.titles == 'The Greatest Showman')
+    
+    searchTitles('greatest showman')
+    
+    greatestshowman <- fetchMovie('The Greatest Showman')
+    names(greatestshowman)
+    greatestshowman$actors <- actors(greatestshowman$id)
+    
+    thepost <- fetchMovie('The Post')
+    thepost$actors <- getActors(thepost$id)
+    
+    starwars <- fetchMovie('Star Wars')
+    starwars$actors <- getActors(starwars$id)
+    
+    
+    
+    list.movies <- head(searchTitles('star wars'))
+    
+    
+    p1 <- plot.metric(metrics(greatestshowman), "total_gross", plotly = T)
+    p2 <- plot.metric(metrics.thepost, "total_gross", plotly = T)
+
+
+
+
+```
