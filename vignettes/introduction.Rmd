@@ -64,40 +64,39 @@ and is accessible in the `moviesDB` object. This has been done in May
 2019, so bare in mind that it will not contain information on more recent movies.
 
 ```{r}
-    data(movies.list)
-    length(unique(movies.list$movies.urls))
+    length(unique(moviesDB$movies.urls))
 ```
 
-One can easily lookup some titles using the `searchTitle` function. The function
+One can easily lookup some titles using the `searchTitle()` function. The function
 only returns a proper result if it finds a unique movie matching the input pattern, 
 otherwise it just prints the matched titles. For ambiguous cases as depicted below, 
 the handy `exact.match` logical argument can be used. 
 
 ```{r}
     # Search for a title
-    searchTitle(pattern = 'expendables', moviesDB = movies.list)
-    searchTitle(pattern = 'The Expendables', moviesDB = movies.list)
-    searchTitle(pattern = 'The Expendables', moviesDB = movies.list, exact.match = TRUE)
+    searchTitle(pattern = 'expendables', moviesDB = moviesDB)
+    searchTitle(pattern = 'The Expendables', moviesDB = moviesDB)
+    searchTitle(pattern = 'The Expendables', moviesDB = moviesDB, exact.match = TRUE)
 ```
 
 Once the **exact** title of a movie is known, information can be retrieved. Note 
-that the **exact** title must be entered, otherwise the `fetchMovie` function 
+that the **exact** title must be entered, otherwise the `fetchMovie()` function 
 will fail. 
 
 ```{r}
     # With the wrong title
-    theexpendables <- fetchMovie(title = 'The expendables', moviesDB = movies.list)
+    theexpendables <- fetchMovie(title = 'The expendables', moviesDB = moviesDB)
     # With the right title - Note the case sensitivity
-    theexpendables <- fetchMovie(title = 'The Expendables', moviesDB = movies.list)
+    theexpendables <- fetchMovie(title = 'The Expendables', moviesDB = moviesDB)
     theexpendables
     class(theexpendables)
     theexpendables %>% str
 ```
 
-As you can see, the output of the `fetchMovie` is a `movieMetrics` object. 
+As you can see, the output of the `fetchMovie()` is a `movieMetrics` object. 
 Just entering the name of the movieMetrics in R console will output a brief 
 summary of the data associated with the movie, and will show the first five 
-days of box-office results. The `metrics` function allows to get the full 
+days of box-office results. The `metrics()` function allows to get the full 
 box-office results. 
 
 ```{r}
@@ -109,11 +108,11 @@ Now, let's scrape some data for a bit more movies.
 
 ```{r}
     # Quick search to find the exact title of the movie The Greatest Showman
-    searchTitle(pattern = 'greatest showman', moviesDB = movies.list)
-    greatestshowman <- fetchMovie(title = 'The Greatest Showman', moviesDB = movies.list)
+    searchTitle(pattern = 'greatest showman', moviesDB = moviesDB)
+    greatestshowman <- fetchMovie(title = 'The Greatest Showman', moviesDB = moviesDB)
     
-    searchTitle(pattern = 'The Post', moviesDB = movies.list)
-    thepost <- fetchMovie(title = 'The Post', moviesDB = movies.list)
+    searchTitle(pattern = 'The Post', moviesDB = moviesDB)
+    thepost <- fetchMovie(title = 'The Post', moviesDB = moviesDB)
 ```
 
 But what if you want to obtain data for a list of movies? Let's say, you want
@@ -123,8 +122,8 @@ the movies matching the input pattern in the `searchTitle` function using the
 can take the list as 
 
 ```{r}
-    list.movies <- searchTitle('star wars', moviesDB = movies.list, return.list = TRUE)
-    starwarsList <- fetchMoviesList(titles = list.movies, moviesDB = movies.list)
-    starwarsList
-    class(starwarsList)
+    starwars.movies <- searchTitle('star wars', moviesDB = moviesDB, return.list = TRUE)
+    starwarsMoviesList <- fetchMoviesList(titles = starwars.movies, moviesDB = moviesDB)
+    starwarsMoviesList
+    class(starwarsMoviesList)
 ```

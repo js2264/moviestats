@@ -140,63 +140,63 @@ fetchMovie <- function(title, moviesDB) {
         title_boxoffice <- xml2::read_html(title_url) 
         
         title_metrics <- title_boxoffice %>%
-        rvest::html_nodes("#box_office_chart:nth-child(9) table") %>% 
-        rvest::html_table() %>% 
-        .[[1]]
+            rvest::html_nodes("#box_office_chart:nth-child(9) table") %>% 
+            rvest::html_table()
+        title_metrics <- ifelse(length(title_metrics) > 0, title_metrics[[1]], NA) 
         
         domestic_gross <- title_boxoffice %>%
-        rvest::html_nodes("#movie_finances tr:nth-child(2) .data") %>% 
-        rvest::html_text() %>% 
-        convertToCurrency() 
+            rvest::html_nodes("#movie_finances tr:nth-child(2) .data") %>% 
+            rvest::html_text() %>% 
+            convertToCurrency() 
         
         total_gross <- title_boxoffice %>% 
-        rvest::html_nodes("tr:nth-child(3) .sum") %>% 
-        rvest::html_text() %>% 
-        convertToCurrency() 
-        
+            rvest::html_nodes("tr:nth-child(3) .sum") %>% 
+            rvest::html_text() %>% 
+            convertToCurrency() 
+            
         distributor <- title_summary %>%
-        rvest::html_nodes("td") %>% 
-        grep("/market/distributor/", ., value = TRUE) %>% 
-        .[[1]] %>%
-        gsub('.*\\\">|</a.*', "", .)
+            rvest::html_nodes("td") %>% 
+            grep("/market/distributor/", ., value = TRUE) %>% 
+            .[[1]] %>%
+            gsub('.*\\\">|</a.*', "", .)
         
         release_date <- title_summary %>%
-        rvest::html_nodes("td") %>% 
-        grep("/market/distributor/", ., value = TRUE) %>% 
-        .[[1]] %>%
-        gsub('<td>', "", .) %>% 
-        gsub(" \\D.*", "", .)
-        year <- release_date %>% 
-        gsub(".*, ", "", .)
+            rvest::html_nodes("td") %>% 
+            grep("/market/distributor/", ., value = TRUE) %>% 
+            .[[1]] %>%
+            gsub('<td>', "", .) %>% 
+            gsub(" \\D.*", "", .)
+            year <- release_date %>% 
+            gsub(".*, ", "", .)
         month <- release_date %>% 
-        strsplit(" ") %>% .[[1]] %>% .[1] %>% match(., month.name)
+            strsplit(" ") %>% .[[1]] %>% .[1] %>% match(., month.name)
         day <- release_date %>%
-        strsplit(" ") %>% .[[1]] %>% .[2] %>% gsub("..,", "", .)
+            strsplit(" ") %>% .[[1]] %>% .[2] %>% gsub("..,", "", .)
         release_date <- as.Date(paste(year, month, day, sep = '-'))
         
         genre <- title_summary %>%
-        rvest::html_nodes("td") %>% 
-        grep("genre", ., value = TRUE) %>% 
-        .[[1]] %>%
-        gsub('.*\\\">|</a.*', "", .)
+            rvest::html_nodes("td") %>% 
+            grep("genre", ., value = TRUE) %>% 
+            .[[1]] %>%
+            gsub('.*\\\">|</a.*', "", .)
         
         runtime <- title_summary %>%
-        rvest::html_nodes("td") %>% 
-        .[title_summary %>% rvest::html_nodes("td") %>% grep('Running Time', .)+1] %>%
-        rvest::html_text() %>%
-        gsub(" minutes", "", .)
+            rvest::html_nodes("td") %>% 
+            .[title_summary %>% rvest::html_nodes("td") %>% grep('Running Time', .)+1] %>%
+            rvest::html_text() %>%
+            gsub(" minutes", "", .)
         
         MPAA_rating <- title_summary %>%
-        rvest::html_nodes("td") %>% 
-        .[title_summary %>% rvest::html_nodes("td") %>% grep('MPAA', .)+1] %>%
-        rvest::html_text() %>%
-        gsub(" .*", "", .)
+            rvest::html_nodes("td") %>% 
+            .[title_summary %>% rvest::html_nodes("td") %>% grep('MPAA', .)+1] %>%
+            rvest::html_text() %>%
+            gsub(" .*", "", .)
         
         budget <- title_summary %>%
-        rvest::html_nodes("td") %>% 
-        .[title_summary %>% rvest::html_nodes("td") %>% grep('Budget', .)+1] %>%
-        rvest::html_text() %>%
-        convertToCurrency()
+            rvest::html_nodes("td") %>% 
+            .[title_summary %>% rvest::html_nodes("td") %>% grep('Budget', .)+1] %>%
+            rvest::html_text() %>%
+            convertToCurrency()
         
         title_results <- list(
             'metrics' = title_metrics,
@@ -210,9 +210,7 @@ fetchMovie <- function(title, moviesDB) {
             'MPAA_rating' = MPAA_rating,
             'budget' = budget,
             'url' = title_url
-        )
-        
-        class(title_results) <- c('movieMetrics', class(title_results))
+        ) %>% add.class('movieMetrics')
         
         return(title_results)
     }
@@ -240,7 +238,11 @@ fetchMovie <- function(title, moviesDB) {
 
 fetchMoviesList <- function(titles, moviesDB) {
     
-    movieMetricsList <- lapply(titles, fetchMovie, moviesDB) %>% 
+    l <- length(titles)
+    movieMetricsList <- lapply(seq_along(titles), function(i) {
+        message("Fetching [", i, "/", l, "]: ", titles[i])
+        fetchMovie(titles[i], moviesDB)
+    }) %>% 
     setNames(titles) %>% 
     add.class("movieMetricsList")
     
