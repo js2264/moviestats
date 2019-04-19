@@ -4,12 +4,14 @@
 \alias{fetchMoviesList}
 \title{Core function}
 \usage{
-fetchMoviesList(titles)
+fetchMoviesList(titles, moviesDB)
 }
 \arguments{
 \item{title}{a character vector of any length}
 }
 \value{
+a movieMetricsList object
+
 a movieMetricsList object
 }
 \description{

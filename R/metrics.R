@@ -1,177 +1,108 @@
+#' A core function
+#' 
+#' Used to find all titles available in the first n.pages of The Numbers database
+#' 
+#' @param n.pages an integer. The number of pages to scan
+#' @return a list of length 2. The first element of the list is a vector 
+#'   of available titles. The second element contains the corresponding urls. 
+#' @keywords searchTitle
+#' @seealso fetchMovie() searchTitle()
+#' @export
+#' @examples
+#' searchTitles('star wars')
+#' 
+#' @import rvest xml2 
+#' @importFrom magrittr "%>%"
+
+availableTitles <- function(n.pages = 500, verbose = T) {
+    
+    titles <- vector(mode = "list", length = n.pages)
+    urls <- vector(mode = "list", length = n.pages)
+    
+    for (page in 1:n.pages) {
+        if (page %% 10 == 0 & verbose)
+            message("Page ", page, "... ")
+        if (page == 1) {
+            url_search <- "https://www.the-numbers.com/movie/budgets/all"
+        } else {
+            url_search <- paste0(
+                "https://www.the-numbers.com/movie/budgets/all/", 
+                100 * (page - 1) + 1
+            )
+        }
+        search_table <- xml2::read_html(url_search) %>% 
+            rvest::html_nodes("td:nth-child(3)")
+        titles[[page]] <- search_table %>%
+            rvest::html_text()
+        urls[[page]] <- search_table %>% 
+            rvest::html_nodes('a') %>% 
+            gsub(".*/movie/", "/movie/", .) %>% 
+            grep("#tab=summary", ., value = T) %>% 
+            gsub("#tab=summary.*", "#tab=box-office", .) %>%
+            paste0("https://www.the-numbers.com", .)
+    }
+
+    titles <- do.call(c, titles)
+    urls <- do.call(c, urls)
+    
+    return(list(
+        "movies.titles" = titles,
+        "movies.urls" = urls
+    ))
+}
+
 #' A useful search function
 #' 
 #' Used to find all titles in MOJO database matching a specific pattern
 #' 
 #' @param pattern a character vector of length 1
-#' @return a vector of matching titles
-#' @keywords search title
+#' @param moviesDB a list of length 2, the first element containing movies 
+#'   names and the second associated URLs.
+#' @param exact.match logical. Whether to perform an exact match 
+#' @param return.list logical. Whether to return the list of matched titles
+#' @param return.url logical. Whether to return URLs instead of matched titles 
+#'   names (cannot be used with `return.list = T`)
+#' @return a vector of matching title or matching URLs
 #' @seealso fetchMovie()
 #' @export
 #' @examples
 #' searchTitles('star wars')
 #' 
-#' @import rvest xml2 magrittr
-#' @importFrom magrittr "%>%"
 
-searchTitles <- function(pattern) {
-    
-    query <- gsub(' ', '%20', tolower(pattern))
-    url_search <- paste0("https://www.boxofficemojo.com/search/?q=", query)
-    search_results <- xml2::read_html(url_search) %>% 
-        rvest::html_nodes("table+ table tr+ tr td:nth-child(1)")
-    available.titles <- search_results %>%
-        rvest::html_text() %>% 
-        grep("\n\t\t", ., value = T) %>% 
-        gsub("\n\t\t", "", .)
-    
-    return(available.titles)
-
-}
-
-#' An internal function
-#' 
-#' Used to transform the data retrieved from MOJO intro an organized dataframe.
-#'   This function should only be called within fetchMovie().
-#' 
-#' @seealso fetchMovie()
-#' @export
-#' 
-#' @importFrom magrittr "%>%"
-
-fixMetrics <- function(title.results) {
-    
-    results <- vector("list", 9) %>%
-        setNames(colnames(title.results))
-    
-    first.day <- title.results[1, 'date'][[1]]
-    year <- first.day %>% gsub(".*, ", "", .)
-    month <- match(first.day %>% gsub("\\.| .*", "", .), month.abb)
-    day <- first.day %>% gsub(",.*", "", .) %>% gsub(".* ", "", .)
-    first.day <- as.Date(paste(year, month, day, sep = '-'))
-    results[['date']] <- c(first.day + seq(1:nrow(title.results)) - 1)
-    
-    results[['rank']] <- title.results[,'rank'] %>% 
-        value.replace("-", NA) %>% 
-        as.numeric()
-    
-    results[['gross']] <- title.results[,'gross'] %>% 
-        gsub("\\$|,", "", .) %>% 
-        as.numeric() %>% 
-        add.class("Currency")
-        
-    results[['daily_percent']] <- title.results[,'daily_percent'] %>% 
-        gsub("\\%|,", "", .) %>% 
-        value.replace("-", 0) %>%
-        as.numeric()
-
-    results[['weekly_percent']] <- title.results[,'weekly_percent'] %>% 
-        gsub("\\%|,", "", .) %>% 
-        value.replace("-", 0) %>%
-        as.numeric()
-    
-    results[['theaters']] <- title.results[,'theaters'] %>% 
-        gsub(",", "", .) %>% 
-        as.numeric()
-
-    results[['per_theater']] <- title.results[,'per_theater'] %>% 
-        gsub("\\$|,", "", .) %>% 
-        as.numeric()
-
-    results[['cum_gross']] <- title.results[,'cum_gross'] %>% 
-        gsub("\\$|,", "", .) %>% 
-        as.numeric() %>% 
-        add.class("Currency")
-        
-    results[['day']] <- title.results[,'day'] %>% 
-        as.numeric()
-    
-    return(data.frame(results))
-
-}
-
-#' An internal function
-#' 
-#' Used to add some extra information to a movieMetrics object.
-#'   This function should only be called within fetchMovie().
-#' 
-#' @seealso fetchMovie()
-#' @export
-#' @import rvest xml2
-#' 
-#' @importFrom magrittr "%>%"
-
-enrichMetrics <- function(title.results, title.page, title.id) {
-    
-    url <- paste0("https://www.boxofficemojo.com/movies/?id=", title.id, ".htm")
-    
-    domestic_gross <- title.page %>%
-        rvest::html_nodes("td td td tr:nth-child(1) td") %>% 
-        rvest::html_text() %>% 
-        gsub(".*\\$|,", "", .) %>%
-        as.numeric() %>% 
-        add.class("Currency")
-    
-    total_gross <- url %>% 
-         xml2::read_html() %>% 
-         rvest::html_nodes("td td td td tr+ tr td+ td b") %>% 
-         rvest::html_text() %>% 
-         gsub(".*\\$|,", "", .) %>%
-         as.numeric() %>% 
-         add.class("Currency")
-    
-    distributor <- title.page %>%
-        rvest::html_nodes("center b > a") %>% 
-        rvest::html_text()
-    
-    release_date <- title.page %>%
-        rvest::html_nodes("nobr a") %>% 
-        rvest::html_text()
-    
-    genre <- title.page %>%
-        rvest::html_nodes("tr:nth-child(3) td:nth-child(1) b") %>% 
-        rvest::html_text()
-    
-    runtime <- title.page %>%
-        rvest::html_nodes("td td td tr:nth-child(3) td+ td b") %>% 
-        rvest::html_text()
-    
-    MPAA_rating <- title.page %>%
-        rvest::html_nodes("tr:nth-child(4) td:nth-child(1) b") %>% 
-        rvest::html_text()
-    
-    budget <- title.page %>%
-        rvest::html_nodes("tr:nth-child(4) td+ td b") %>% 
-        rvest::html_text() %>% 
-        .[1] %>%
-        gsub("\\$| ", "", .) %>%
-        gsub("million", "000000", .) %>% 
-        gsub("thousand", "000", .) %>% 
-        as.numeric() %>%
-        add.class("Currency")
-
-    title <- title.page %>%
-        rvest::html_nodes("br+ font b") %>% 
-        rvest::html_text()
-    
-    list.results <- list(
-        'metrics' = title.results,
-        'title' = title,
-        'id' = title.id,
-        'release_date' = release_date,
-        'domestic_gross' = domestic_gross,
-        'total_gross' = total_gross,
-        'distributor' = distributor,
-        'genre' = genre,
-        'runtime' = runtime,
-        'MPAA_rating' = MPAA_rating,
-        'budget' = budget,
-        'url' = url
-    )
-    
-    class(list.results) <- c('movieMetrics', class(list.results))
-    
-    return(list.results)
-    
+searchTitle <- function(pattern, moviesDB, exact.match = F, return.list = F, return.url = F) {
+    if (exact.match) {
+        return.list <- F
+        results <- grep(paste0("^", pattern, "$"), moviesDB$movies.titles, ignore.case = F, value = T)
+        if (length(results) > 1) {
+            print(results)
+            message("You used the option 'exact.match = T' and your research returned multiple results.")
+            message("Try again.")
+        } else if (length(results) == 0) {
+            message("No movie was found. Try without the 'exact.match = T' option.")
+        } else {
+            if (return.url) {
+                return(moviesDB$movies.urls[moviesDB$movies.titles == results][1])
+            } else {
+                return(results)
+            }
+        }
+    } else {
+        results <- grep(pattern, moviesDB$movies.titles, ignore.case = T, value = T)
+        if (length(results) > 1) {
+            if (return.list) {
+                return(results)
+            } else {
+                print(results)
+                message("More than one file found. Be more specific!")
+            }
+        } else if (length(results) == 0) {
+            message("No movie was found. Try a simpler pattern.")
+            message("For instance, to find 'Star Wars Ep. III: Revenge of the Sith',")
+            message("try 'star wars' instead of 'Star Wars 7'.")
+        } else {
+            return(results)
+        }
+    }
 }
 
 #' Core function
@@ -182,54 +113,100 @@ enrichMetrics <- function(title.results, title.page, title.id) {
 #' @return a movieMetrics object
 #' @keywords movieMetrics
 #' @seealso fetchMovie() fetchMoviesList()
+#' @return a movieMetrics object
 #' @export
 #' @examples 
-#' fetchMovie('Star Wars')
+#' fetchMovie('The Greatest Showman')
 #' 
 #' @import rvest xml2 
 #' @importFrom magrittr "%>%"
 
-fetchMovie <- function(title) {
+fetchMovie <- function(title, moviesDB) {
     
     require(magrittr)
     
-    query <- gsub(' ', '%20', tolower(title))
-    url_search <- paste0("https://www.boxofficemojo.com/search/?q=", query)
-    search_results <- xml2::read_html(url_search) %>% 
-        rvest::html_nodes("table+ table tr+ tr td:nth-child(1)")
-    available.titles <- search_results %>%
-        rvest::html_text() %>% 
-        grep("\n\t\t", ., value = T) %>% 
-        gsub("\n\t\t", "", .)
-    which.title <- which(available.titles == title)
-    if (length(which.title) < 1) {
-        message("Be more specific in your movie title. The following titles matched your query:")
-        return(available.titles)
-    } else if (length(which.title) > 1) {
-        warning("[WARNING]: More than one movie have this exact title. Fetching results for the most recent one.")
-        which.title <- which.title[1]
-    }
-    title.id <- search_results %>% 
-        .[which.title] %>%
-        sub('.*"(.*)".*', "\\1", .) %>% 
-        gsub(".*=|.htm", "", .)
-    title.url <- paste0("https://www.boxofficemojo.com/movies/?page=daily&view=chart&id=", title.id, ".htm")
-    title.page <- xml2::read_html(title.url) 
-    title.results <- title.page %>%
-        rvest::html_nodes(".chart-wide td+ td") %>% 
-        rvest::html_text() %>% 
-        tail(-7) %>%
-        matrix(., ncol = 9, byrow = T) %>% 
-        setColNames(c("date", "rank", "gross", "daily_percent", "weekly_percent", "theaters", "per_theater", "cum_gross", "day"))
-    if (nrow(title.results) < 1) {
-        warning(paste0(title, " is referenced in Boxoffice MOJO database but does not have any data yet. Come back later!"))
-        return(NA)
-    }
-    title.results %>% 
-        fixMetrics() %>%
-        enrichMetrics(title.page, title.id) -> title.results
-    return(title.results)
+    title_url <- searchTitle(title, moviesDB, exact.match = T, return.url = T)
+    if (length(title_url) > 0) {
+        title_summary <- xml2::read_html(gsub("box-office", "summary", title_url)) 
+        title_boxoffice <- xml2::read_html(title_url) 
+        
+        title_metrics <- title_boxoffice %>%
+            rvest::html_nodes("#box_office_chart:nth-child(9) table") %>% 
+            rvest::html_table() %>% 
+            .[[1]]
+        
+        domestic_gross <- title_boxoffice %>%
+            rvest::html_nodes("#movie_finances tr:nth-child(2) .data") %>% 
+            rvest::html_text() %>% 
+            convertToCurrency() 
+        
+        total_gross <- title_boxoffice %>% 
+             rvest::html_nodes("tr:nth-child(3) .sum") %>% 
+             rvest::html_text() %>% 
+             convertToCurrency() 
+        
+        distributor <- title_summary %>%
+            rvest::html_nodes("td") %>% 
+            grep("/market/distributor/", ., value = T) %>% 
+            .[[1]] %>%
+            gsub('.*\\\">|</a.*', "", .)
+        
+        release_date <- title_summary %>%
+            rvest::html_nodes("td") %>% 
+            grep("/market/distributor/", ., value = T) %>% 
+            .[[1]] %>%
+            gsub('<td>', "", .) %>% 
+            gsub(" \\D.*", "", .)
+        year <- release_date %>% 
+            gsub(".*, ", "", .)
+        month <- release_date %>% 
+            strsplit(" ") %>% .[[1]] %>% .[1] %>% match(., month.name)
+        day <- release_date %>%
+            strsplit(" ") %>% .[[1]] %>% .[2] %>% gsub("..,", "", .)
+        release_date <- as.Date(paste(year, month, day, sep = '-'))
+        
+        genre <- title_summary %>%
+            rvest::html_nodes("td") %>% 
+            grep("genre", ., value = T) %>% 
+            .[[1]] %>%
+            gsub('.*\\\">|</a.*', "", .)
+        
+        runtime <- title_summary %>%
+            rvest::html_nodes("td") %>% 
+            .[title_summary %>% rvest::html_nodes("td") %>% grep('Running Time', .)+1] %>%
+            rvest::html_text() %>%
+            gsub(" minutes", "", .)
+            
+        MPAA_rating <- title_summary %>%
+            rvest::html_nodes("td") %>% 
+            .[title_summary %>% rvest::html_nodes("td") %>% grep('MPAA', .)+1] %>%
+            rvest::html_text() %>%
+            gsub(" .*", "", .)
+        
+        budget <- title_summary %>%
+            rvest::html_nodes("td") %>% 
+            .[title_summary %>% rvest::html_nodes("td") %>% grep('Budget', .)+1] %>%
+            rvest::html_text() %>%
+            convertToCurrency()
+        
+        title_results <- list(
+            'metrics' = title_metrics,
+            'title' = title,
+            'release_date' = release_date,
+            'domestic_gross' = domestic_gross,
+            'total_gross' = total_gross,
+            'distributor' = distributor,
+            'genre' = genre,
+            'runtime' = runtime,
+            'MPAA_rating' = MPAA_rating,
+            'budget' = budget,
+            'url' = title_url
+        )
+        
+        class(title_results) <- c('movieMetrics', class(title_results))
 
+        return(title_results)
+    }
 }
 
 #' Core function
@@ -240,6 +217,7 @@ fetchMovie <- function(title) {
 #' @return a movieMetricsList object
 #' @keywords movieMetricsList
 #' @seealso fetchMovie() fetchMoviesList()
+#' @return a movieMetricsList object
 #' @export
 #' @examples 
 #' titles <- searchTitles('star wars')
@@ -247,9 +225,9 @@ fetchMovie <- function(title) {
 #' 
 #' @importFrom magrittr "%>%"
 
-fetchMoviesList <- function(titles) {
+fetchMoviesList <- function(titles, moviesDB) {
     
-    movieMetricsList <- lapply(titles, fetchMovie) %>% 
+    movieMetricsList <- lapply(titles, fetchMovie, moviesDB) %>% 
         setNames(titles) %>% 
         add.class("movieMetricsList")
     

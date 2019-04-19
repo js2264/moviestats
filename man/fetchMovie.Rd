@@ -4,19 +4,21 @@
 \alias{fetchMovie}
 \title{Core function}
 \usage{
-fetchMovie(title)
+fetchMovie(title, moviesDB)
 }
 \arguments{
 \item{title}{a character vector of length 1}
 }
 \value{
 a movieMetrics object
+
+a movieMetrics object
 }
 \description{
 Used to retrieve data about a movie using MOJO database
 }
 \examples{
-fetchMovie('Star Wars')
+fetchMovie('The Greatest Showman')
 
 }
 \seealso{

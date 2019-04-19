@@ -1,0 +1,128 @@
+---
+title: "moviestats package vignette"
+author: "Jacques Serizay"
+date: "`r Sys.Date()`"
+output: 
+    rmarkdown::html_document:
+        theme: flatly
+        highlight: tango
+        preserve_yaml: true
+        code_folding: show
+        df_print: tibble
+        toc_float: true
+        toc_collapsed: true
+        number_sections: false
+        thumbnails: true
+        gallery: true
+vignette: >
+    %\VignetteIndexEntry{Vignette Title}
+    %\VignetteEngine{knitr::rmarkdown}
+    %\VignetteEncoding{UTF-8}
+---
+
+# Introduction to moviestats
+
+```{r "chunk-options_genes-classes"}
+    knitr::opts_chunk$set(
+        echo = TRUE, 
+        tidy = 'styler', 
+        fig.align = 'center', 
+        cache = TRUE, 
+        cache.path = '.cache/', 
+        include = FALSE
+    )
+```
+
+This package leverages [The Numbers](https://www.the-numbers.com/) database 
+to obtain information about movies. 
+It can be used to extract a lot of useful numbers such as box-office successes 
+(or failures!) and contains functions to plot some results for 
+individual movies or to compare multiple movies to each other. 
+
+Firstly, we need to get a list of all available movies in the database. We 
+can scrape their movies page using the `availableTitles()` function, 
+indicating how many pages we want to scrape (each page contains 100 movies). 
+Importantly, the pages here are ranked by the movies budgets. If you are 
+looking for some low-budget indie movies, you might be facing some issues...  
+  
+The `availableTitles()` function outputs a list of length 2, which contains 
+a list of available titles in the first element, and the associated URLs in 
+the second element.
+
+```{r}
+    ## Required libraries
+    require(magrittr)
+    require(rvest)
+    ## Get the 10.000 first movies in The Numbers database
+    top100.titles <- availableTitles(n.page = 1)
+    head(top100.titles$movies.titles)
+    head(top100.titles$movies.urls)
+```
+
+For convenience, a large list of available movies has already been compiled 
+and is accessible in the `all.titles` object. This has been done in May 
+2019, so bare in mind that it will not contain information on more recent movies.
+
+```{r}
+    length(unique(all.titles$movies.urls))
+```
+
+One can easily lookup some titles using the `searchTitle` function. The function
+only returns a proper result if it finds a unique movie matching the input pattern, 
+otherwise it just prints the matched titles. For ambiguous cases as depicted below, 
+the handy `exact.match` logical argument can be used. 
+
+```{r}
+    # Search for a title
+    searchTitle(pattern = 'expendables', moviesDB = all.titles)
+    searchTitle(pattern = 'The Expendables', moviesDB = all.titles)
+    searchTitle(pattern = 'The Expendables', moviesDB = all.titles, exact.match = T)
+```
+
+Once the **exact** title of a movie is known, information can be retrieved. Note 
+that the **exact** title must be entered, otherwise the `fetchMovie` function 
+will fail. 
+
+```{r}
+    # With the wrong title
+    theexpendables <- fetchMovie(title = 'The expendables', moviesDB = all.titles)
+    # With the right title - Note the case sensitivity
+    theexpendables <- fetchMovie(title = 'The Expendables', moviesDB = all.titles)
+    theexpendables
+    class(theexpendables)
+```
+
+As you can see, the output of the `fetchMovie` is a `movieMetrics` object. 
+Just entering the name of the movieMetrics in R console will output a brief 
+summary of the data associated with the movie, and will show the first five 
+days of box-office results. The `metrics` function allows to get the full 
+box-office results. 
+
+```{r}
+    metrics(theexpendables) %>% head
+    identical(metrics(theexpendables), theexpendables$metrics)
+```
+
+Now, let's scrape some data for a bit more movies.
+
+```{r}
+    # Quick search to find the exact title of the movie The Greatest Showman
+    searchTitle(pattern = 'greatest showman', moviesDB = all.titles)
+    greatestshowman <- fetchMovie(title = 'The Greatest Showman', moviesDB = all.titles)
+    
+    searchTitle(pattern = 'The Post', moviesDB = all.titles)
+    thepost <- fetchMovie(title = 'The Post', moviesDB = all.titles)
+```
+
+But what if you want to obtain data for a list of movies? Let's say, you want
+to get data for all the Star Wars movies? First, you can save a list of all 
+the movies matching the input pattern in the `searchTitle` function using the 
+`return.list = T` logical argument (FALSE by default). Then the `fetchMoviesList`
+can take the list as 
+
+```{r}
+    list.movies <- searchTitle('star wars', moviesDB = all.titles, return.list = T)
+    starwarsList <- fetchMoviesList(titles = list.movies, moviesDB = all.titles)
+    starwarsList
+    class(starwarsList)
+```

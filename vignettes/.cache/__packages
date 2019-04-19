@@ -1,0 +1,10 @@
+base
+magrittr
+xml2
+rvest
+rmarkdown
+BiocGenerics
+S4Vectors
+IRanges
+GenomeInfoDb
+GenomicRanges

@@ -7,7 +7,6 @@ add.class <- function(x, newclass) {
 
 print.movieMetrics <- function(x) {
    message("# Movie: ", x$title)
-   message("# Box-office MOJO ID: ", x$id)
    message("# Release date: ", x$release_date)
    message("# Total gross: ", paste0('$', formatC(x$total_gross, format = "f", big.mark = ',', digits = 0, decimal.mark = '.')))
    message("# Genre: ", x$genre)
