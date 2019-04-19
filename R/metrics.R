@@ -10,7 +10,7 @@
 #' @seealso fetchMovie() searchTitle()
 #' @export
 #' @examples
-#' moviesDB <- availableTitles(n.pages = 20, verbose = TRUE)
+#' moviesDB <- availableTitles(n.pages = 10, verbose = TRUE)
 #' 
 #' @import rvest xml2 
 #' @importFrom magrittr "%>%"
@@ -55,7 +55,7 @@ availableTitles <- function(n.pages = 52, verbose = TRUE) {
         "movies.urls" = urls
     ) %>% 
     fixDuplicatedMovies() %>%
-    add.class("moviesDB")
+    addClass("moviesDB")
     
     return(moviesDB)
 }
@@ -130,7 +130,7 @@ searchTitle <- function(pattern, moviesDB, exact.match = F, return.list = F, ret
 #' fetchMovie('The Greatest Showman', moviesDB)
 #' 
 #' @import rvest xml2 
-#' @importFrom magrittr "%>%"
+#' @importFrom magrittr "%>%" "%<>%"
 
 fetchMovie <- function(title, moviesDB) {
     
@@ -138,11 +138,16 @@ fetchMovie <- function(title, moviesDB) {
     if (length(title_url) > 0) {
         title_summary <- xml2::read_html(gsub("box-office", "summary", title_url)) 
         title_boxoffice <- xml2::read_html(title_url) 
-        
         title_metrics <- title_boxoffice %>%
             rvest::html_nodes("#box_office_chart:nth-child(9) table") %>% 
             rvest::html_table()
-        title_metrics <- ifelse(length(title_metrics) > 0, title_metrics[[1]], NA) 
+        if (length(title_metrics) > 0) {
+            title_metrics %<>% 
+                .[[1]] %>%
+                fixMetrics()
+        } else {
+            NA
+        }
         
         domestic_gross <- title_boxoffice %>%
             rvest::html_nodes("#movie_finances tr:nth-child(2) .data") %>% 
@@ -210,7 +215,7 @@ fetchMovie <- function(title, moviesDB) {
             'MPAA_rating' = MPAA_rating,
             'budget' = budget,
             'url' = title_url
-        ) %>% add.class('movieMetrics')
+        ) %>% addClass('movieMetrics')
         
         return(title_results)
     }
@@ -244,7 +249,7 @@ fetchMoviesList <- function(titles, moviesDB) {
         fetchMovie(titles[i], moviesDB)
     }) %>% 
     setNames(titles) %>% 
-    add.class("movieMetricsList")
+    addClass("movieMetricsList")
     
     return(movieMetricsList)
     

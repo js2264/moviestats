@@ -19,7 +19,7 @@ a moviesDB object. A list of length 2, the first element of the list is a vector
 Used to find all titles available in the first n.pages of The Numbers database
 }
 \examples{
-moviesDB <- availableTitles(n.pages = 20, verbose = TRUE)
+moviesDB <- availableTitles(n.pages = 10, verbose = TRUE)
 
 }
 \seealso{

@@ -1,10 +1,3 @@
-add.class <- function(x, newclass) {
-    
-    class(x) <- c(newclass, class(x))
-    return(x)
-    
-}
-
 #' @importFrom utils head
 #' @importFrom utils tail
 
