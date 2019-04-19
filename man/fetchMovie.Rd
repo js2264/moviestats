@@ -8,6 +8,9 @@ fetchMovie(title, moviesDB)
 }
 \arguments{
 \item{title}{a character vector of length 1}
+
+\item{moviesDB}{a list of length 2, the first element containing movies 
+names and the second associated URLs.}
 }
 \value{
 a movieMetrics object
@@ -18,7 +21,7 @@ a movieMetrics object
 Used to retrieve data about a movie using MOJO database
 }
 \examples{
-fetchMovie('The Greatest Showman')
+fetchMovie('The Greatest Showman', moviesDB)
 
 }
 \seealso{

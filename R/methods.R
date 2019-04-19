@@ -5,6 +5,26 @@ add.class <- function(x, newclass) {
     
 }
 
+#' @importFrom utils head
+#' @importFrom utils tail
+
+print.moviesDB <- function(x) {
+   message(
+       "Nb of movies in database: ", length(x[[1]])
+   )
+   df.h <- utils::head(x[[1]], 3)
+   if (length(x[[1]]) > 3) {
+       print(df.h)
+       message("\t\t...")
+   } else {
+       print(x[[1]])
+   }
+   invisible(x)
+}
+
+#' @importFrom utils head
+#' @importFrom utils tail
+
 print.movieMetrics <- function(x) {
    message("# Movie: ", x$title)
    message("# Release date: ", x$release_date)
@@ -14,8 +34,8 @@ print.movieMetrics <- function(x) {
    message("# Budget: ", paste0('$', formatC(x$budget, format = "f", big.mark = ',', digits = 0, decimal.mark = '.')))
    message("# ... Other infos: ", paste(names(x)[names(x) %notin% c("metrics", "title", "id", "release_date", "total_gross", "genre", "runtime", "budget")], collapse = ', '))
    message("")
-   df.h <- head(x$metrics, 3)
-   df.t <- tail(x$metrics, 3)
+   df.h <- utils::head(x$metrics, 3)
+   df.t <- utils::tail(x$metrics, 3)
    if (nrow(x$metrics) > 3) {
        print(df.h)
        message("\t\t...\t\t...\t\t...\t\t...")

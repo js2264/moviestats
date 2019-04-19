@@ -35,7 +35,7 @@ vignette: >
 
 This package leverages [The Numbers](https://www.the-numbers.com/) database 
 to obtain information about movies. 
-It can be used to extract a lot of useful numbers such as box-office successes 
+It can be used to e xtract a lot of useful numbers such as box-office successes 
 (or failures!) and contains functions to plot some results for 
 individual movies or to compare multiple movies to each other. 
 
@@ -45,9 +45,9 @@ indicating how many pages we want to scrape (each page contains 100 movies).
 Importantly, the pages here are ranked by the movies budgets. If you are 
 looking for some low-budget indie movies, you might be facing some issues...  
   
-The `availableTitles()` function outputs a list of length 2, which contains 
-a list of available titles in the first element, and the associated URLs in 
-the second element.
+The `availableTitles()` function return an object of moviesDB class, which is a 
+list of length 2, containing a list of available titles in the first element, 
+and the associated URLs in the second element.
 
 ```{r}
     ## Required libraries
@@ -59,12 +59,13 @@ the second element.
     head(top100.titles$movies.urls)
 ```
 
-For convenience, a large list of available movies has already been compiled 
-and is accessible in the `all.titles` object. This has been done in May 
+For convenience, a list of 5200 available movies has already been compiled 
+and is accessible in the `moviesDB` object. This has been done in May 
 2019, so bare in mind that it will not contain information on more recent movies.
 
 ```{r}
-    length(unique(all.titles$movies.urls))
+    data(movies.list)
+    length(unique(movies.list$movies.urls))
 ```
 
 One can easily lookup some titles using the `searchTitle` function. The function
@@ -74,9 +75,9 @@ the handy `exact.match` logical argument can be used.
 
 ```{r}
     # Search for a title
-    searchTitle(pattern = 'expendables', moviesDB = all.titles)
-    searchTitle(pattern = 'The Expendables', moviesDB = all.titles)
-    searchTitle(pattern = 'The Expendables', moviesDB = all.titles, exact.match = T)
+    searchTitle(pattern = 'expendables', moviesDB = movies.list)
+    searchTitle(pattern = 'The Expendables', moviesDB = movies.list)
+    searchTitle(pattern = 'The Expendables', moviesDB = movies.list, exact.match = TRUE)
 ```
 
 Once the **exact** title of a movie is known, information can be retrieved. Note 
@@ -85,11 +86,12 @@ will fail.
 
 ```{r}
     # With the wrong title
-    theexpendables <- fetchMovie(title = 'The expendables', moviesDB = all.titles)
+    theexpendables <- fetchMovie(title = 'The expendables', moviesDB = movies.list)
     # With the right title - Note the case sensitivity
-    theexpendables <- fetchMovie(title = 'The Expendables', moviesDB = all.titles)
+    theexpendables <- fetchMovie(title = 'The Expendables', moviesDB = movies.list)
     theexpendables
     class(theexpendables)
+    theexpendables %>% str
 ```
 
 As you can see, the output of the `fetchMovie` is a `movieMetrics` object. 
@@ -107,11 +109,11 @@ Now, let's scrape some data for a bit more movies.
 
 ```{r}
     # Quick search to find the exact title of the movie The Greatest Showman
-    searchTitle(pattern = 'greatest showman', moviesDB = all.titles)
-    greatestshowman <- fetchMovie(title = 'The Greatest Showman', moviesDB = all.titles)
+    searchTitle(pattern = 'greatest showman', moviesDB = movies.list)
+    greatestshowman <- fetchMovie(title = 'The Greatest Showman', moviesDB = movies.list)
     
-    searchTitle(pattern = 'The Post', moviesDB = all.titles)
-    thepost <- fetchMovie(title = 'The Post', moviesDB = all.titles)
+    searchTitle(pattern = 'The Post', moviesDB = movies.list)
+    thepost <- fetchMovie(title = 'The Post', moviesDB = movies.list)
 ```
 
 But what if you want to obtain data for a list of movies? Let's say, you want
@@ -121,8 +123,8 @@ the movies matching the input pattern in the `searchTitle` function using the
 can take the list as 
 
 ```{r}
-    list.movies <- searchTitle('star wars', moviesDB = all.titles, return.list = T)
-    starwarsList <- fetchMoviesList(titles = list.movies, moviesDB = all.titles)
+    list.movies <- searchTitle('star wars', moviesDB = movies.list, return.list = TRUE)
+    starwarsList <- fetchMoviesList(titles = list.movies, moviesDB = movies.list)
     starwarsList
     class(starwarsList)
 ```

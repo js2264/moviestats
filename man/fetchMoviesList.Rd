@@ -7,7 +7,10 @@
 fetchMoviesList(titles, moviesDB)
 }
 \arguments{
-\item{title}{a character vector of any length}
+\item{titles}{a character vector of any length}
+
+\item{moviesDB}{a list of length 2, the first element containing movies 
+names and the second associated URLs.}
 }
 \value{
 a movieMetricsList object
@@ -18,8 +21,9 @@ a movieMetricsList object
 Used to retrieve data about a list of movies using MOJO database
 }
 \examples{
-titles <- searchTitles('star wars')
-fetchMoviesList(titles)
+moviesDB <- availableTitles(n.pages = 20, verbose = TRUE)
+starwarsmovies <- searchTitle('star wars', moviesDB, return.list = TRUE)
+starwarsmovies <- fetchMoviesList(starwarsmovies, moviesDB)
 
 }
 \seealso{

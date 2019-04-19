@@ -4,20 +4,22 @@
 \alias{availableTitles}
 \title{A core function}
 \usage{
-availableTitles(n.pages = 500, verbose = T)
+availableTitles(n.pages = 52, verbose = TRUE)
 }
 \arguments{
 \item{n.pages}{an integer. The number of pages to scan}
+
+\item{verbose}{an logical. Should the pages scraping process be verbose?}
 }
 \value{
-a list of length 2. The first element of the list is a vector 
-  of available titles. The second element contains the corresponding urls.
+a moviesDB object. A list of length 2, the first element of the list is a vector 
+  of available titles, the second element contains the corresponding urls.
 }
 \description{
 Used to find all titles available in the first n.pages of The Numbers database
 }
 \examples{
-searchTitles('star wars')
+moviesDB <- availableTitles(n.pages = 20, verbose = TRUE)
 
 }
 \seealso{

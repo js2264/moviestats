@@ -1,0 +1,2 @@
+- Fetch ratings by iMDB
+- Fetch full casting

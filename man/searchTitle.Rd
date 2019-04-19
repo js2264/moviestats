@@ -5,7 +5,7 @@
 \title{A useful search function}
 \usage{
 searchTitle(pattern, moviesDB, exact.match = F, return.list = F,
-  return.url = F)
+  return.url = FALSE)
 }
 \arguments{
 \item{pattern}{a character vector of length 1}
@@ -27,7 +27,7 @@ a vector of matching title or matching URLs
 Used to find all titles in MOJO database matching a specific pattern
 }
 \examples{
-searchTitles('star wars')
+searchTitle('star wars', moviesDB)
 
 }
 \seealso{
