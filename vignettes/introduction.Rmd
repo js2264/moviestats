@@ -39,6 +39,8 @@ It can be used to e xtract a lot of useful numbers such as box-office successes
 (or failures!) and contains functions to plot some results for 
 individual movies or to compare multiple movies to each other. 
 
+## Building a database
+
 Firstly, we need to get a list of all available movies in the database. We 
 can scrape their movies page using the `availableTitles()` function, 
 indicating how many pages we want to scrape (each page contains 100 movies). 
@@ -64,7 +66,18 @@ and is accessible in the `moviesDB` object. This has been done in May
 2019, so bare in mind that it will not contain information on more recent movies.
 
 ```{r}
-    length(unique(moviesDB$movies.urls))
+    moviesDB <- availableTitles(n.page = 52)
+    # These URLs are not formatted the same way than the others...
+    faulty.urls <- c(
+        "https://www.the-numbers.com/movie/Waterworld#tab=box-office",
+        "https://www.the-numbers.com/movie/Asterix-aux-Jeux-Olympiques#tab=box-office", 
+        "https://www.the-numbers.com/movie/Dantes-Peak#tab=box-office",
+        "https://www.the-numbers.com/movie/Army-of-the-Dead-(TBA-ID)#tab=box-office", 
+        "https://www.the-numbers.com/movie/Asterix-et-Obelix-Au-service-de-Sa-Majeste#tab=box-office",
+        "https://www.the-numbers.com/movie/Renegades-(2017)#tab=box-office", 
+        "https://www.the-numbers.com/movie/Ridiculous-6-The#tab=box-office"
+    )
+    moviesDB <- moviesDB[-match(faulty.urls, moviesDB$movies.url)]
 ```
 
 One can easily lookup some titles using the `searchTitle()` function. The function
@@ -79,6 +92,8 @@ the handy `exact.match` logical argument can be used.
     searchTitle(pattern = 'The Expendables', moviesDB = moviesDB, exact.match = TRUE)
 ```
 
+## Fetching data about a movie
+
 Once the **exact** title of a movie is known, information can be retrieved. Note 
 that the **exact** title must be entered, otherwise the `fetchMovie()` function 
 will fail. 
@@ -90,7 +105,7 @@ will fail.
     theexpendables <- fetchMovie(title = 'The Expendables', moviesDB = moviesDB)
     theexpendables
     class(theexpendables)
-    theexpendables %>% str
+    str(theexpendables)
 ```
 
 As you can see, the output of the `fetchMovie()` is a `movieMetrics` object. 
@@ -104,26 +119,106 @@ box-office results.
     identical(metrics(theexpendables), theexpendables$metrics)
 ```
 
-Now, let's scrape some data for a bit more movies.
+## Adapted functions
+
+Several functions methods have been adapted for the movieMetrics class. For 
+instance, one can subset a movieMetrics object as follows:
 
 ```{r}
-    # Quick search to find the exact title of the movie The Greatest Showman
-    searchTitle(pattern = 'greatest showman', moviesDB = moviesDB)
-    greatestshowman <- fetchMovie(title = 'The Greatest Showman', moviesDB = moviesDB)
-    
-    searchTitle(pattern = 'The Post', moviesDB = moviesDB)
-    thepost <- fetchMovie(title = 'The Post', moviesDB = moviesDB)
+    # Get the first 2 days
+    theexpendables[1:2]
+    # Bit more complex: filter by date
+    theexpendables %>% 
+        filter.movieMetrics(as.Date(c("2010-09-01", "2010-09-30")))
 ```
 
-But what if you want to obtain data for a list of movies? Let's say, you want
-to get data for all the Star Wars movies? First, you can save a list of all 
-the movies matching the input pattern in the `searchTitle` function using the 
-`return.list = T` logical argument (FALSE by default). Then the `fetchMoviesList`
-can take the list as 
+One can also get the number of days recorded in the movieMetrics boxoffice
+using the `length()` function: 
 
 ```{r}
-    starwars.movies <- searchTitle('star wars', moviesDB = moviesDB, return.list = TRUE)
-    starwarsMoviesList <- fetchMoviesList(titles = starwars.movies, moviesDB = moviesDB)
-    starwarsMoviesList
-    class(starwarsMoviesList)
+    theexpendables %>% 
+        length()
+    theexpendables %>% 
+        filter(as.Date(c("2010-09-01", "2010-09-30"))) %>% 
+        length()
+```
+
+## Plotting options
+
+```{r}
+    require(ggplot2)
+    # Let's compare  The Expendables (2010) and The Greatest Showman (2017)
+    theexpendables <- fetchMovie(title = 'The Expendables', moviesDB = moviesDB)
+    greatestshowman <- fetchMovie(title = 'The Greatest Showman', moviesDB = moviesDB)
+    p1 <- plot(theexpendables, plotly = FALSE)
+    p2 <- plot(greatestshowman, plotly = FALSE)
+    dev.new(width = 10, height = 5)
+    gridExtra::grid.arrange(p1, p2, ncol = 2) # To plot graphs side-by-side
+    
+    # Wow. looks like The Expendables had a better start. 
+    # But let's scale the x axis to the same time window. 
+    p1 <- plot(theexpendables, plotly = FALSE, time.range = length(greatestshowman)) + ylim(c(0, 10))
+    p2 <- plot(greatestshowman, plotly = FALSE, time.range = length(greatestshowman)) + ylim(c(0, 10))
+    gridExtra::grid.arrange(p1, p2, ncol = 2)
+    # Now we can see that The Greatest Showman, despite starting lower, stayed in the box-office for much longer!
+    
+    # What about if we plot the total gross? 
+    p1 <- plot(theexpendables, yaxis = 'domestic_total_gross', plotly = FALSE, time.range = length(greatestshowman)) + ylim(c(0, 200))
+    p2 <- plot(greatestshowman, yaxis = 'domestic_total_gross', plotly = FALSE, time.range = length(greatestshowman)) + ylim(c(0, 200))
+    gridExtra::grid.arrange(p1, p2, ncol = 2)
+    
+    # And we can also plot the rank in box-office over 90 days from the release date
+    p1 <- plot(theexpendables, yaxis = 'rank', plotly = FALSE, time.range = 90) + ylim(c(0, 20))
+    p2 <- plot(greatestshowman, yaxis = 'rank', plotly = FALSE, time.range = 90) + ylim(c(0, 20))
+    gridExtra::grid.arrange(p1, p2, ncol = 2)
+```
+
+## movieMetricsLongList class
+
+We can easily expend our analysis to lists of movies. To fetch data from lots
+of movies (> 100), a decent amount of time is needed. We provide an already 
+generated list of ~1000 movies with the highest budget in the `top1000.moviesList`
+`movieMetricsLongList` object. This list has been generated using the following code.
+The `url` argument was used to override the `titles` argument, to be sure to 
+retrieve the actual movies urls despite possible doublons in title names. 
+
+```{r}
+    movieMetricsLongList <- fetchMoviesList(moviesDB$movies.titles[1:1000], moviesDB)
+    str(movieMetricsLongList)
+```
+
+```{r}
+    MCU.movies <- c(
+        "Iron Man", 
+        "The Incredible Hulk", 
+        "Iron Man 2", 
+        "Thor", 
+        "Captain America: The First Avenger", 
+        "The Avengers (2012)",
+        "Iron Man 3", 
+        "Thor: The Dark World", 
+        "Captain America: The Winter Soldier", 
+        "Guardians of the Galaxy", 
+        "Avengers: Age of Ultron", 
+        "Ant-Man", 
+        "Captain America: Civil War", 
+        "Doctor Strange", 
+        "Guardians of the Galaxy Vol 2", 
+        "Spider-Man: Homecoming", 
+        "Thor: Ragnarok", 
+        "Black Panther",
+        "Avengers: Infinity War", 
+        "Ant-Man and the Wasp", 
+        "Captain Marvel"
+    )
+    # Fetch data
+    marvelLongList <- fetchMoviesList(MCU.movies, moviesDB = moviesDB) 
+    # Add MCU phase
+    MCU.phase <- factor(c(rep(1, 6), rep(2, 6), rep(3, 9)))
+    marvelLongList %<>% addFeature(MCU.phase, "phase")
+    # Add year of release
+    years <- infos(marvelLongList)$release_date %>% substr(start = 1, stop = 4) %>% as.numeric() %>% factor(., levels = 2008:2019)
+    marvelLongList %<>% addFeature(years, "year_of_release")
+    # Plot results
+    p <- plot.movieMetricsLongList(marvelLongList, x = "day", y = "rank", facet = "year_of_release", xlim = c(0, 120))
 ```

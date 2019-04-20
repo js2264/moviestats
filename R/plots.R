@@ -6,8 +6,8 @@ plot.movieMetrics <- function(
     movieMetrics, 
     xaxis = "date", 
     yaxis = "domestic_daily_gross", 
-    plotly = TRUE,
-    time.range = NULL
+    time.range = NULL,
+    plotly = TRUE
     
     ) {
     
@@ -43,12 +43,21 @@ plot.movieMetrics <- function(
         if (is.null(time.range)) {
             p <- p + scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y")
         } else {
-            p <- p + 
-                scale_x_date(
-                    date_breaks = "1 month", 
-                    date_labels =  "%b %Y",
-                    limits = as.Date(time.range)
-                )
+            if (length(time.range) == 2) {
+                p <- p + 
+                    scale_x_date(
+                        date_breaks = "1 month", 
+                        date_labels =  "%b %Y",
+                        limits = as.Date(time.range)
+                    )
+            } else if (length(time.range) == 1 && time.range > 0 && is.numeric(time.range)) {
+                p <- p + 
+                    scale_x_date(
+                        date_breaks = "1 month", 
+                        date_labels =  "%b %Y",
+                        limits = as.Date(c(metrics.df[1,'date'], (metrics.df[1,'date'] + time.range)))
+                    )
+            }
         }
     }
     if (yaxis == "domestic_daily_gross" || yaxis == "domestic_total_gross")
@@ -59,6 +68,23 @@ plot.movieMetrics <- function(
             p,
             tooltip = c("date", "consecutive days", "domestic total gross (in M.)", "theaters")
         )
+    
+    return(p)
+    
+}
+
+plot.movieMetricsLongList <- function(movieMetricsLongList, x = "day", y = "domestic_total_gross", col = "title", fill = NULL, facet = NULL, xlim = NULL, ylim = NULL) {
+    
+    p <- ggplot(metrics(movieMetricsLongList), aes_string(x, y, col = col, fill = fill)) + 
+        geom_point(aes_string(col = "title")) + 
+        theme_bw() +
+        theme(legend.position = "bottom")
+    if (!is.null(facet)) 
+        p <- p + facet_wrap(facet)
+    if (!is.null(xlim))
+        p <- p + xlim(xlim)
+    if (!is.null(ylim))
+        p <- p + xlim(ylim)
     
     return(p)
     

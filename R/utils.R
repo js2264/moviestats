@@ -7,21 +7,25 @@ valueReplace <- function(x, val, newval) {
 }
 
 addClass <- function(x, newclass) {
-    
-    class(x) <- c(newclass, class(x))
+    attr(x, "class") <- c(newclass, class(x))
     return(x)
-    
 }
 
 capitalizeFirstLetter <- function(string) {
     return(paste0(toupper(substr(string, 1, 1)), substr(string, 2, nchar(string))))
 }
 
-# -------------
-
-metrics <- function(movieMetrics) {
-    return(movieMetrics$metrics)
+setRowNames <- function(df, names) {
+    row.names(df) <- names
+    return(df)
 }
+
+na.remove <- function(x) {
+    which.na <- is.na(x)
+    return(x[!which.na])
+}
+
+# -------------
 
 convertToCurrency <- function(vec) {
     result <- vec %>%
