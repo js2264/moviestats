@@ -75,7 +75,7 @@ plot.movieMetrics <- function(
 
 plot.movieMetricsLongList <- function(movieMetricsLongList, x = "day", y = "domestic_total_gross", col = "title", fill = NULL, facet = NULL, xlim = NULL, ylim = NULL) {
     
-    p <- ggplot(metrics(movieMetricsLongList), aes_string(x, y, col = col, fill = fill)) + 
+    p <- ggplot(metrics(movieMetricsLongList), aes_string(x, y, col = col, fill = fill, facet = facet)) + 
         geom_point(aes_string(col = "title")) + 
         theme_bw() +
         theme(legend.position = "bottom")

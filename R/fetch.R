@@ -176,7 +176,11 @@ fetchMovie <- function(title, moviesDB) {
         month <- release_date %>% 
             strsplit(" ") %>% .[[1]] %>% .[1] %>% match(., month.name)
         day <- release_date %>%
-            strsplit(" ") %>% .[[1]] %>% .[2] %>% gsub("..,", "", .)
+            strsplit(" ") %>% 
+            .[[1]] %>% 
+            .[2] %>% 
+            gsub("..,", "", .) %>% 
+            as.numeric()
         release_date <- as.Date(paste(year, month, day, sep = '-'))
         
         genre <- title_summary %>%

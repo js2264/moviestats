@@ -28,7 +28,7 @@ print.moviesDB <- function(x) {
     invisible(x)
 }
 
-'[.moviesDB' <- function(moviesDB, vec) {
+`[.moviesDB` <- function(moviesDB, vec) {
     moviesDB <- list(
         'movies.titles' = moviesDB$movies.titles[vec], 
         'movies.urls' = moviesDB$movies.urls[vec] 
@@ -52,7 +52,7 @@ print.movieMetrics <- function(x) {
     message("\t\t...\t\t...\t\t...\t\t...")
 }
 
-'[.movieMetrics' <- function(movieMetrics, range) {
+`[.movieMetrics` <- function(movieMetrics, range) {
     metrics.df <- metrics(movieMetrics)
     if (is.numeric(range)) {
         metrics.df %<>% .[range,]
@@ -89,17 +89,26 @@ names.movieMetricsLongList <- function(movieMetricsLongList) {
     movieMetricsLongList$Infos$title
 }
 
-'[.movieMetricsLongList' <- function(movieMetricsLongList, titles) {
+`[.movieMetricsLongList` <- function(movieMetricsLongList, titles) {
     
-    titles %<>%
+    if (class(titles) == "character") {
+        titles %<>%
         '['(. %in% names(movieMetricsLongList))
+    } else if (class(titles) == "integer" || class(titles) == "numeric") {
+        titles <- names(movieMetricsLongList)[titles]
+    }
     
-    df1 <- movieMetricsLongList$Infos[titles, ]
-    df2 <- movieMetricsLongList$Metrics[names(movieMetricsLongList) %in% titles, ]
+    df1 <- infos(movieMetricsLongList)[names(movieMetricsLongList) %in% titles, ]
+    df2 <- metrics(movieMetricsLongList)[metrics(movieMetricsLongList)$title %in% titles, ]
     movieMetricsLongList <- list("Infos" = df1, "Metrics" = df2) %>%
         addClass("movieMetricsLongList")
-        
+    
+    if (length(movieMetricsLongList) == 1) {
+        movieMetricsLongList %<>% coerceToMovieMetrics()
+    }
+    
     return(movieMetricsLongList)
+
 }
 
 print.movieMetricsLongList <- function(x) {
