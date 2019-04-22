@@ -12,7 +12,6 @@
 #' @examples
 #' moviesDB <- availableTitles(n.pages = 10, verbose = TRUE)
 #' 
-#' @import rvest xml2 
 #' @importFrom magrittr "%>%"
 
 availableTitles <- function(n.pages = 52, verbose = TRUE) {
@@ -129,7 +128,6 @@ searchTitle <- function(pattern, moviesDB, exact.match = FALSE, return.list = FA
 #' @examples 
 #' fetchMovie('The Greatest Showman', moviesDB)
 #' 
-#' @import rvest xml2 
 #' @importFrom magrittr "%>%" "%<>%"
 
 fetchMovie <- function(title, moviesDB) {

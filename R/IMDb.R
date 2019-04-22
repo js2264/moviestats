@@ -1,3 +1,5 @@
+#' @export
+
 findIMDbIndex <- function(title, movieMetricsLongList) {
     
     movie_title <- gsub(" \\(.*", "", title) %>% gsub("\\s", "\\+", .) %>% tolower()

@@ -73,6 +73,8 @@ coerceToMovieMetrics <- function(movieMetricsLongList) {
     
 }
 
+#' @export
+
 addFeature <- function(movieMetricsLongList, feature, feature_name, append.to.metrics = TRUE, overwrite = FALSE) {
     stopifnot(length(feature) == length(movieMetricsLongList))
     if (feature_name %in% colnames(infos(movieMetricsLongList)) & overwrite == FALSE) {
@@ -91,6 +93,8 @@ addFeature <- function(movieMetricsLongList, feature, feature_name, append.to.me
     colnames(movieMetricsLongList$Infos)[colnames(movieMetricsLongList$Infos) == 'newvar'] = feature_name
     return(movieMetricsLongList)
 }
+
+#' @export
 
 removeFeature <- function(movieMetricsLongList, feature_name) {
     movieMetricsLongList$Metrics <- movieMetricsLongList$Metrics[names(movieMetricsLongList$Metrics) != feature_name]

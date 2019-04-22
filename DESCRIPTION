@@ -14,5 +14,4 @@ Imports:
     rvest, 
     magrittr, 
     ggplot2, 
-    plotly,
-    lubridate
+    plotly
