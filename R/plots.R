@@ -1,5 +1,6 @@
 #' @import ggplot2
 #' @importFrom plotly ggplotly
+#' @export
 
 plot.movieMetrics <- function(
     
@@ -72,6 +73,8 @@ plot.movieMetrics <- function(
     return(p)
     
 }
+
+#' @export
 
 plot.movieMetricsLongList <- function(movieMetricsLongList, x = "day", y = "domestic_total_gross", col = "title", fill = NULL, facet = NULL, xlim = NULL, ylim = NULL) {
     

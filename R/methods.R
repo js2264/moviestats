@@ -1,5 +1,6 @@
 #' @importFrom utils head
 #' @importFrom utils tail
+#' @export
 
 print.Currency <- function(value, currency.sym = "$", digits = 0, sep = ",", decimal = ".") {
     print(paste(
@@ -13,6 +14,7 @@ print.Currency <- function(value, currency.sym = "$", digits = 0, sep = ",", dec
 
 #' @importFrom utils head
 #' @importFrom utils tail
+#' @export
 
 print.moviesDB <- function(x) {
     message(
@@ -28,6 +30,8 @@ print.moviesDB <- function(x) {
     invisible(x)
 }
 
+#' @export
+
 `[.moviesDB` <- function(moviesDB, vec) {
     moviesDB <- list(
         'movies.titles' = moviesDB$movies.titles[vec], 
@@ -38,6 +42,8 @@ print.moviesDB <- function(x) {
 }
 
 # --------------
+
+#' @export
 
 print.movieMetrics <- function(x) {
     message("# Movie: ", x$title)
@@ -52,6 +58,8 @@ print.movieMetrics <- function(x) {
     message("\t\t...\t\t...\t\t...\t\t...")
 }
 
+#' @export
+
 `[.movieMetrics` <- function(movieMetrics, range) {
     metrics.df <- metrics(movieMetrics)
     if (is.numeric(range)) {
@@ -60,6 +68,8 @@ print.movieMetrics <- function(x) {
         return(movieMetrics)
     } 
 }
+
+#' @export
 
 filter.movieMetrics <- function(movieMetrics, range) {
     metrics.df <- metrics(movieMetrics)
@@ -74,9 +84,13 @@ filter.movieMetrics <- function(movieMetrics, range) {
     }
 }
 
+#' @export
+
 length.movieMetrics <- function(movieMetrics) {
     nrow(metrics(movieMetrics))
 }
+
+#' @export
 
 str.movieMetrics <- function(movieMetrics) {
     class(movieMetrics) <- "list"
@@ -85,9 +99,13 @@ str.movieMetrics <- function(movieMetrics) {
 
 # ---------
 
+#' @export
+
 names.movieMetricsLongList <- function(movieMetricsLongList) {
     movieMetricsLongList$Infos$title
 }
+
+#' @export
 
 `[.movieMetricsLongList` <- function(movieMetricsLongList, titles) {
     
@@ -111,6 +129,8 @@ names.movieMetricsLongList <- function(movieMetricsLongList) {
 
 }
 
+#' @export
+
 print.movieMetricsLongList <- function(x) {
     n.movies <- nrow(x$Infos)
     
@@ -120,13 +140,19 @@ print.movieMetricsLongList <- function(x) {
     invisible(x)
 }
 
+#' @export
+
 head.movieMetricsLongList <- function(movieMetricsLongList) {
     head(movieMetricsLongList$Infos)
 }
 
+#' @export
+
 length.movieMetricsLongList <- function(movieMetricsLongList) {
     length(names(movieMetricsLongList))
 }
+
+#' @export
 
 str.movieMetricsLongList <- function(movieMetricsLongList) {
     class(movieMetricsLongList) <- "list"
